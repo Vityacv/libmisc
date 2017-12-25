@@ -33,6 +33,8 @@ void *regcall GetProcAddressByHash(HMODULE hMod, unsigned hashName);
        ->OptionalHeader.SizeOfImage)
 void regcall memswap(unsigned char *src, unsigned char *dst, unsigned len);
 void *regcall memcpyl(void *d, const void *s, size_t n);
+void * regcall memmem(unsigned char *haystack, size_t haystack_len,
+                unsigned char *needle, size_t needle_len);
 
 void stdcall FreeLibraryThread(void *hDllHandle);
 

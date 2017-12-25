@@ -21,13 +21,13 @@ void regcall patchData::addCode(unsigned char *adr, size_t sz) {
   pData->addPatch(adr, sz, PAGE_EXECUTE_READWRITE);
 };
 
-void regcall patchData::codeswap(unsigned char *src, unsigned char *dst, unsigned len) {
+void regcall patchData::codeswap(unsigned char *src, const unsigned char *dst, unsigned len) {
 	patchData *pData = patchData::instance();
 	memswap(src,pData->addCodeSwapPatch(src,dst,len,PAGE_EXECUTE_READWRITE),len);
 }
 
 
-unsigned char * patchData::addCodeSwapPatch(unsigned char *adr, unsigned char *dst, size_t sz, unsigned protect) {
+unsigned char * patchData::addCodeSwapPatch(unsigned char *adr, const unsigned char *dst, size_t sz, unsigned protect) {
   patchDef * pd = getPatch(adr);
   if (adr && !pd) {
     pd = (patchDef *)malloc(sizeof(patchDef) + sz*2);

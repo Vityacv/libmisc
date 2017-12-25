@@ -156,6 +156,37 @@ void regcall memswap(unsigned char *src, unsigned char *dst, unsigned len) {
   }
 }
 
+void * regcall memmem(unsigned char *haystack, size_t haystack_len,
+                unsigned char *needle, size_t needle_len)
+{
+  unsigned char *begin = haystack;
+  unsigned char *last_possible = begin + haystack_len - needle_len;
+  unsigned char *tail = needle;
+  char point;
+
+  /*
+   * The first occurrence of the empty string is deemed to occur at
+   * the beginning of the string.
+   */
+  if (needle_len == 0)
+    return (void *)begin;
+
+  /*
+   * Sanity check, otherwise the loop might search through the whole
+   * memory.
+   */
+  if (haystack_len < needle_len)
+    return NULL;
+
+  point = *tail++;
+  for (; begin <= last_possible; begin++) {
+    if (*begin == point && !memcmp(begin + 1, tail, needle_len - 1))
+      return (void *)begin;
+  }
+
+  return NULL;
+}
+
 void stdcall FreeLibraryThread(void *hDllHandle) {
   FreeLibraryAndExitThread((HMODULE)hDllHandle, 0);
 }
