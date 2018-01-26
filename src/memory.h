@@ -6,8 +6,8 @@ extern "C" {
 
 #define regcall __fastcall
 #define stdcall __stdcall
-#define cdeclcall __cdeclcall
-
+#define cdeclcall __cdecl
+#define objcall __thiscall
 
 #define exc asm volatile("int3")
 
