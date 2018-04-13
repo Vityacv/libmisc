@@ -15,7 +15,7 @@ int __cdecl __getmainargs(int *_Argc, char ***_Argv, char ***_Env,
 
 int _tmain(int, TCHAR **, TCHAR **);
 
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
+BOOLEAN WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
 
 
 #ifdef __cplusplus

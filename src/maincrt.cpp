@@ -109,7 +109,7 @@ void mainCRT()
      ret=_tmain(_argc, _argv, 0);
     }
   free(_argv);
-  free(_Env);
+  //free(_Env);
   ondetach();
   exit(ret);
 }
@@ -130,7 +130,6 @@ void tWinMainCRT()
   //if(_argc!=1)cmd=cmd+1;
   while(*cmd==_T(' '))cmd++;
   free(_argv);
-  free(_Env);
   ret = _tWinMain(GetModuleHandle(0), 0, cmd, si.dwFlags&STARTF_USESHOWWINDOW ? si.wShowWindow : SW_SHOWDEFAULT);
   }
   ondetach();
