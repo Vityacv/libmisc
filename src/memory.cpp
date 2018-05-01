@@ -79,7 +79,7 @@ unsigned char regcall isMemoryExist(void *adr) {
 }
 
 unsigned char regcall isModuleExist(uintptr_t mod) {
-  wchar_t str[1024];
+  TCHAR str[1024];
   return GetModuleFileName((HMODULE)mod, str, 511) != 0;
 }
 

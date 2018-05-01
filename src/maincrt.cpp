@@ -114,6 +114,27 @@ void mainCRT()
   exit(ret);
 }
 
+#ifdef UNICODE
+void wmainCRTN()
+#else
+void mainCRTN()
+#endif
+{
+  //onattach(0,0);
+  STARTUPINFO _StartInfo;
+  int _argc;
+  _TCHAR ** _argv;
+  _TCHAR ** _Env;
+  int ret;
+  if(__tgetmainargs(&_argc,&_argv,&_Env,FALSE,&_StartInfo)==0){
+     ret=_tmain(_argc, _argv, 0);
+    }
+  free(_argv);
+  //free(_Env);
+  //ondetach();
+  exit(ret);
+}
+
 void tWinMainCRT()
 {
   onattach(0,0);
