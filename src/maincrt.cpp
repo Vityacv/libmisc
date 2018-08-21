@@ -157,6 +157,28 @@ void tWinMainCRT()
   exit(ret);
 }
 
+void tWinMainCRTN()
+{
+  //onattach(0,0);
+  STARTUPINFO si;
+  si.dwFlags = 0;
+  STARTUPINFO _StartInfo;
+  int _argc;
+  _TCHAR ** _argv;
+  _TCHAR ** _Env;
+  int ret;
+  if(__tgetmainargs(&_argc,&_argv,&_Env,FALSE,&_StartInfo)==0){
+  TCHAR *cmd=GetCommandLine();
+  cmd=cmd+_tcslen(_argv[0])+2;
+  //if(_argc!=1)cmd=cmd+1;
+  while(*cmd==_T(' '))cmd++;
+  free(_argv);
+  ret = _tWinMain(GetModuleHandle(0), 0, cmd, si.dwFlags&STARTF_USESHOWWINDOW ? si.wShowWindow : SW_SHOWDEFAULT);
+  }
+  //ondetach();
+  exit(ret);
+}
+
 BOOL WINAPI DllMainCRT(HINSTANCE hInst, DWORD reason, LPVOID imp)
 {
   if (reason == DLL_PROCESS_ATTACH)

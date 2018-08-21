@@ -13,8 +13,8 @@ win=$HOME/.wine/drive_c
 src=$PWD
 
 sizeopt="-Os -fomit-frame-pointer -fno-stack-protector -mno-stack-arg-probe"
-cppopt="-fno-threadsafe-statics -fno-rtti" #-fno-exceptions 
-cfshared="-std=c++17 -static -static-libgcc -static-libstdc++ -D_UNICODE -DUNICODE -municode -s -fno-ident -fno-asynchronous-unwind-tables -fdata-sections -ffunction-sections -nostdlib -fno-sized-deallocation $cppopt $sizeopt"
+cppopt="-fno-threadsafe-statics -fno-rtti -fno-exceptions"
+cfshared="-std=c++17 -static -static-libgcc -static-libstdc++ -s -fno-ident -fno-asynchronous-unwind-tables -fdata-sections -ffunction-sections -nostdlib -fno-sized-deallocation -march=core2 -mfpmath=sse -flto $cppopt $sizeopt"
 
 build ()
 { 
@@ -42,10 +42,12 @@ esac
 done
 cd $obj
     echo "compiling $arch..."
-    $cppcomp -c $cfshared -include $src/pch.h $src/conv.cpp $src/memory.cpp $src/stl.cpp $src/patch.cpp $src/main.cpp $src/maincrt.cpp
+    $cppcomp -c $cfshared  -D_UNICODE -DUNICODE -municode -include $src/pch.h $src/conv.cpp $src/memory.cpp $src/stl.cpp $src/patch.cpp $src/main.cpp
     $cppcomp -c $cfshared $src/dll_dependency.S
-
-    $artool cr libmisc.a conv.o memory.o stl.o patch.o
+    $ccomp -c $cfshared $src/dll_math.c
+    $artool cr libmisc.a conv.o memory.o stl.o patch.o dll_dependency.o
+    $cppcomp -c $cfshared -include $src/pch.h $src/conv.cpp $src/memory.cpp $src/stl.cpp $src/patch.cpp $src/main.cpp
+    $artool cr libmisca.a conv.o memory.o stl.o patch.o dll_dependency.o 
 }
 obj=$subdir1/obj64
 cppcomp=$cppcomp64
@@ -54,9 +56,13 @@ artool=$ar64
 arch=win64
 build $@
 
+$cppcomp64 $cfshared -D_UNICODE -DUNICODE -municode -eentry -include $src/pch.h $src/test.cpp $obj/libmisc.a -lmsvcrt -lkernel32 
+
 obj=$subdir1/obj32
 cppcomp=$cppcomp32
 ccomp=$ccomp32
 artool=$ar32
 arch=win32
 build $@
+
+$cppcomp $cfshared -D_UNICODE -DUNICODE -municode -e_entry -include $src/pch.h $src/test.cpp $obj/libmisc.a -lmsvcrt -lkernel32 

@@ -1,7 +1,7 @@
 
 #ifndef _STL_H
-//void *operator new(size_t sz);
-//void operator delete(void *addr);
+// void *operator new(size_t sz);
+// void operator delete(void *addr);
 
 namespace stl {
 
@@ -18,6 +18,6 @@ struct string {
   int capacity;
   char str[16];
 };
-}  // namespace stl
+} // namespace stl
 #define _STL_H
 #endif

@@ -16,6 +16,8 @@ inline void *regcall GetProcAddressByHashT(T pOptHdr, HMODULE hMod,
       (IMAGE_EXPORT_DIRECTORY *)((uintptr_t)hMod + ExportDirVA);
   unsigned int *NameVA =
       (unsigned int *)((uintptr_t)hMod + pExportDir->AddressOfNames);
+  uintptr_t funcAddress = pExportDir->AddressOfFunctions;
+  uintptr_t ordAddress = pExportDir->AddressOfNameOrdinals;
   intptr_t i = pExportDir->NumberOfNames;
   do {
     i--;
@@ -29,9 +31,12 @@ inline void *regcall GetProcAddressByHashT(T pOptHdr, HMODULE hMod,
       continue;
     }
     {
+      unsigned short NameOrdinal =
+          ((unsigned short *)((uintptr_t)hMod +
+                              ordAddress))[i];
       unsigned int procAddrVA =
           ((unsigned int *)((uintptr_t)hMod +
-                            pExportDir->AddressOfFunctions))[i];
+                            funcAddress))[NameOrdinal];
       if (procAddrVA > ExportDirVA && ExportDirVA + ExportDirSz) {
         {
           return (void *)GetProcAddress(hMod,
@@ -93,6 +98,41 @@ void regcall unprotectMem(unsigned char *adr, unsigned sz) {
   VirtualProtect(adr, sz, PAGE_READWRITE, (PDWORD)&tmp);
 }
 
+
+unsigned char *regcall searchBytes3(unsigned char *pBuff, uintptr_t pBuffSize,
+                                   unsigned char *pPattBuf) {
+  size_t pPattSize=*(unsigned short*)(pPattBuf);
+  pPattBuf+=2;
+  unsigned char * pPattMaskBuf=pPattBuf+pPattSize,
+  * pPattEnd = pPattBuf + pPattSize,
+  * pBuffEnd = pBuff + pBuffSize;
+    for (unsigned char *pBuffCur = pBuff; pBuffCur != pBuffEnd; pBuffCur++) {
+      if(*pBuffCur == *pPattBuf)
+      {
+        unsigned char *bMask = pPattBuf, *pData = pBuffCur;
+        uintptr_t i=0;
+        while (pData != pBuffEnd) {
+          ++i, ++pData, ++bMask;
+          if (bMask == pPattEnd) return pBuffCur; 
+          if ((pPattMaskBuf[(uintptr_t)(i/8)] & (1 << (i % 8)))==0 && *pData != *bMask) break;
+        }
+      }
+    }
+  return 0;
+}
+
+
+unsigned char *regcall scanBytes2(unsigned char *pBuff, uintptr_t pBuffSize,
+                                 unsigned char *pPattBuf) {
+  int tmp;
+  unsigned char *addr = searchBytes3(pBuff, pBuffSize, pPattBuf);
+  //if (!addr) {
+  //  DBGLOG("Pattern not found %p %p %s", pBuff, (void *)pBuffSize, pPattBuf);
+  //}
+  return addr;
+}
+
+
 unsigned char *regcall scanBytes(unsigned char *pBuff, uintptr_t pBuffSize,
                                  char *pPattStr) {
   int tmp;
@@ -103,6 +143,28 @@ unsigned char *regcall scanBytes(unsigned char *pBuff, uintptr_t pBuffSize,
   return addr;
 }
 
+unsigned char *regcall searchBytes2(unsigned char *pBuff, uintptr_t pBuffSize,
+                                   unsigned char *pPattBuf) {
+  uintptr_t pPattSize=*(unsigned short*)(pPattBuf);
+  unsigned char * pPatt=(pPattBuf+sizeof(unsigned short));
+  unsigned char * pPattMaskBuf=pPatt+pPattSize;
+  unsigned char pPattMask[512];
+  for(uintptr_t i = 0;i!=pPattSize;i++){
+    pPattMask[i] = pPattMaskBuf[(unsigned)(i/8)] & (1 << (i % 8));
+  }
+  {
+    unsigned char *pBuffEnd = pBuff + pBuffSize,
+                  *pPattEnd = pPattSize + pPatt - 1;
+    for (unsigned char *pBuffCur = pBuff; pBuffCur != pBuffEnd; pBuffCur++) {
+      unsigned char *bMask = pPatt, *pMask = pPattMask, *pData = pBuffCur;
+      for (; pData != pBuffEnd; ++pMask, ++pData, ++bMask) {
+        if (*pMask == 0 && *pData != *bMask) break;
+        if (bMask == pPattEnd) return pBuffCur;
+      }
+    }
+  }
+  return 0;
+}
 // pBuff - scan buffer
 // pBuffSize - buffer size
 // pPattStr - pattern string, ?? - byte skip (example: 11 22 ?? 33)
