@@ -16,38 +16,37 @@ sizeopt="-Os -fomit-frame-pointer -fno-stack-protector -mno-stack-arg-probe"
 cppopt="-fno-threadsafe-statics -fno-rtti -fno-exceptions"
 cfshared="-std=c++17 -static -static-libgcc -static-libstdc++ -s -fno-ident -fno-asynchronous-unwind-tables -fdata-sections -ffunction-sections -nostdlib -fno-sized-deallocation -march=core2 -mfpmath=sse -flto $cppopt $sizeopt"
 
+phead="pch.h"
+
 build ()
 { 
 for i in "$@"
 do
 case $i in
     -g)
-    echo "generating $arch pch.h.gch"
-    $cppcomp $cfshared -x c++-header -o $obj/pch.h.gch -c $src/pch.cpp
+    echo "generating $arch $phead.gch"
+    $cppcomp $cfshared -x c++-header -o $obj/$phead.gch -c $src/pch.cpp
     return
-    ;;
-    -w|-win)
-    echo "initializing wine link for ulink"
-    #ulink from officical ftp site won't work with latest wine. So i provide patched version.
-    #official ftp site: ftp://ftp.styx.cabel.net/pub/UniLink/
-    if [ ! -e $win/$thisdir ]; then
-        ln -s $subdir0/$thisdir $win/$thisdir
-    fi
-    if [ ! -e $win/extra ]; then
-        ln -s $subdir1/extra $win
-    fi
-    exit;
     ;;
 esac
 done
 cd $obj
     echo "compiling $arch..."
-    $cppcomp -c $cfshared  -D_UNICODE -DUNICODE -municode -include $src/pch.h $src/conv.cpp $src/memory.cpp $src/stl.cpp $src/patch.cpp $src/main.cpp
+if [ ! -f "$obj/$phead.gch" ]; then
+    echo "precompiled header doesn't exist"
+    build -g
+fi
+if [ -f "$src/$phead.gch" ]; then
+    rm $src/$phead.gch
+fi
+ln -s $obj/$phead.gch $src
+    $cppcomp -c $cfshared -include $src/$phead -D_UNICODE -DUNICODE -municode -include $src/pch.h $src/conv.cpp $src/memory.cpp $src/stl.cpp $src/patch.cpp $src/main.cpp
     $cppcomp -c $cfshared $src/dll_dependency.S
     $ccomp -c $cfshared $src/dll_math.c
     $artool cr libmisc.a conv.o memory.o stl.o patch.o dll_dependency.o
     $cppcomp -c $cfshared -include $src/pch.h $src/conv.cpp $src/memory.cpp $src/stl.cpp $src/patch.cpp $src/main.cpp
     $artool cr libmisca.a conv.o memory.o stl.o patch.o dll_dependency.o 
+    rm $src/$phead.gch
 }
 obj=$subdir1/obj64
 cppcomp=$cppcomp64
@@ -63,6 +62,6 @@ cppcomp=$cppcomp32
 ccomp=$ccomp32
 artool=$ar32
 arch=win32
-build $@
+#build $@
 
-$cppcomp $cfshared -D_UNICODE -DUNICODE -municode -e_entry -include $src/pch.h $src/test.cpp $obj/libmisc.a -lmsvcrt -lkernel32 
+#$cppcomp $cfshared -D_UNICODE -DUNICODE -municode -e_entry -include $src/pch.h $src/test.cpp $obj/libmisc.a -lmsvcrt -lkernel32 

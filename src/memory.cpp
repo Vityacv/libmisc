@@ -88,28 +88,27 @@ unsigned char regcall isModuleExist(uintptr_t mod) {
   return GetModuleFileName((HMODULE)mod, str, 511) != 0;
 }
 
-void regcall unprotectCode(unsigned char *adr, unsigned sz) {
-  unsigned char *tmp;
+void regcall unprotectCode(uint8_t *adr, unsigned sz) {
+  uint8_t *tmp;
   VirtualProtect(adr, sz, PAGE_EXECUTE_READWRITE, (PDWORD)&tmp);
 }
 
-void regcall unprotectMem(unsigned char *adr, unsigned sz) {
-  unsigned char *tmp;
+void regcall unprotectMem(uint8_t *adr, unsigned sz) {
+  uint8_t *tmp;
   VirtualProtect(adr, sz, PAGE_READWRITE, (PDWORD)&tmp);
 }
 
-
-unsigned char *regcall searchBytes3(unsigned char *pBuff, uintptr_t pBuffSize,
-                                   unsigned char *pPattBuf) {
+uint8_t *regcall searchBytes3(uint8_t *pBuff, uintptr_t pBuffSize,
+                                   uint8_t *pPattBuf) {
   size_t pPattSize=*(unsigned short*)(pPattBuf);
   pPattBuf+=2;
-  unsigned char * pPattMaskBuf=pPattBuf+pPattSize,
+  uint8_t * pPattMaskBuf=pPattBuf+pPattSize,
   * pPattEnd = pPattBuf + pPattSize,
   * pBuffEnd = pBuff + pBuffSize;
-    for (unsigned char *pBuffCur = pBuff; pBuffCur != pBuffEnd; pBuffCur++) {
+    for (uint8_t *pBuffCur = pBuff; pBuffCur != pBuffEnd; pBuffCur++) {
       if(*pBuffCur == *pPattBuf)
       {
-        unsigned char *bMask = pPattBuf, *pData = pBuffCur;
+        uint8_t *bMask = pPattBuf, *pData = pBuffCur;
         uintptr_t i=0;
         while (pData != pBuffEnd) {
           ++i, ++pData, ++bMask;
@@ -122,41 +121,74 @@ unsigned char *regcall searchBytes3(unsigned char *pBuff, uintptr_t pBuffSize,
 }
 
 
-unsigned char *regcall scanBytes2(unsigned char *pBuff, uintptr_t pBuffSize,
-                                 unsigned char *pPattBuf) {
+uint8_t *regcall scanBytes(uint8_t *pBuff, uintptr_t pBuffSize,
+                                 uint8_t *pPattBuf) {
   int tmp;
-  unsigned char *addr = searchBytes3(pBuff, pBuffSize, pPattBuf);
+  uint8_t *addr = searchBytes3(pBuff, pBuffSize, pPattBuf);
   //if (!addr) {
   //  DBGLOG("Pattern not found %p %p %s", pBuff, (void *)pBuffSize, pPattBuf);
   //}
   return addr;
 }
 
+uint8_t *searchSkipBytes(uint8_t *pBuff, uintptr_t pBuffSize, ...) {
+  va_list vl;
+  uint8_t *val;
+  uint8_t *current = pBuff, *result = pBuff;
+  while (1) {
+    va_start(vl, 0);
+    int i = 0;
+    uintptr_t skip;
+    do {
+      uint8_t *pPatt = va_arg(vl, uint8_t *), *tmp;
+      uintptr_t pPattSz = *(unsigned short *)pPatt;
+      if (i)
+        tmp = scanBytes(current, skip + pPattSz, pPatt);
+      else
+        tmp = scanBytes(result + 1, (pBuffSize + pBuff) - (result + 1), pPatt);
+      skip = va_arg(vl, uintptr_t);
+      if (!i) {
+        if (tmp) {
+          i++;
+          current = tmp + pPattSz;
+          result = tmp;
+        } else
+          return 0;
+      }else current = tmp + pPattSz;
+      if (!tmp)
+        break;
+      if (!skip && tmp)
+        return result;
+    } while (skip);
+    va_end(vl);
+  }
+}
 
-unsigned char *regcall scanBytes(unsigned char *pBuff, uintptr_t pBuffSize,
+
+uint8_t *regcall scanBytes2(uint8_t *pBuff, uintptr_t pBuffSize,
                                  char *pPattStr) {
   int tmp;
-  unsigned char *addr = searchBytes(pBuff, pBuffSize, pPattStr);
+  uint8_t *addr = searchBytes(pBuff, pBuffSize, pPattStr);
   if (!addr) {
     DBGLOG("Pattern not found %p %p %s", pBuff, (void *)pBuffSize, pPattStr);
   }
   return addr;
 }
 
-unsigned char *regcall searchBytes2(unsigned char *pBuff, uintptr_t pBuffSize,
-                                   unsigned char *pPattBuf) {
+uint8_t *regcall searchBytes2(uint8_t *pBuff, uintptr_t pBuffSize,
+                                   uint8_t *pPattBuf) {
   uintptr_t pPattSize=*(unsigned short*)(pPattBuf);
-  unsigned char * pPatt=(pPattBuf+sizeof(unsigned short));
-  unsigned char * pPattMaskBuf=pPatt+pPattSize;
+  uint8_t * pPatt=(pPattBuf+sizeof(unsigned short));
+  uint8_t * pPattMaskBuf=pPatt+pPattSize;
   unsigned char pPattMask[512];
   for(uintptr_t i = 0;i!=pPattSize;i++){
     pPattMask[i] = pPattMaskBuf[(unsigned)(i/8)] & (1 << (i % 8));
   }
   {
-    unsigned char *pBuffEnd = pBuff + pBuffSize,
+    uint8_t *pBuffEnd = pBuff + pBuffSize,
                   *pPattEnd = pPattSize + pPatt - 1;
-    for (unsigned char *pBuffCur = pBuff; pBuffCur != pBuffEnd; pBuffCur++) {
-      unsigned char *bMask = pPatt, *pMask = pPattMask, *pData = pBuffCur;
+    for (uint8_t *pBuffCur = pBuff; pBuffCur != pBuffEnd; pBuffCur++) {
+      uint8_t *bMask = pPatt, *pMask = pPattMask, *pData = pBuffCur;
       for (; pData != pBuffEnd; ++pMask, ++pData, ++bMask) {
         if (*pMask == 0 && *pData != *bMask) break;
         if (bMask == pPattEnd) return pBuffCur;
@@ -168,7 +200,7 @@ unsigned char *regcall searchBytes2(unsigned char *pBuff, uintptr_t pBuffSize,
 // pBuff - scan buffer
 // pBuffSize - buffer size
 // pPattStr - pattern string, ?? - byte skip (example: 11 22 ?? 33)
-unsigned char *regcall searchBytes(unsigned char *pBuff, uintptr_t pBuffSize,
+uint8_t *regcall searchBytes(uint8_t *pBuff, uintptr_t pBuffSize,
                                    char *pPattStr) {
   uintptr_t pPattSize;
   unsigned char pPatt[512], pPattMask[512];
@@ -197,10 +229,10 @@ unsigned char *regcall searchBytes(unsigned char *pBuff, uintptr_t pBuffSize,
     pPattSize = (pCur1 - 1) / 2;
   }
   {
-    unsigned char *pBuffEnd = pBuff + pBuffSize,
+    uint8_t *pBuffEnd = pBuff + pBuffSize,
                   *pPattEnd = pPattSize + pPatt - 1;
-    for (unsigned char *pBuffCur = pBuff; pBuffCur != pBuffEnd; pBuffCur++) {
-      unsigned char *bMask = pPatt, *pMask = pPattMask, *pData = pBuffCur;
+    for (uint8_t *pBuffCur = pBuff; pBuffCur != pBuffEnd; pBuffCur++) {
+      uint8_t *bMask = pPatt, *pMask = pPattMask, *pData = pBuffCur;
       for (; pData != pBuffEnd; ++pMask, ++pData, ++bMask) {
         if (*pMask == 0 && *pData != *bMask) break;
         if (bMask == pPattEnd) return pBuffCur;
@@ -210,20 +242,20 @@ unsigned char *regcall searchBytes(unsigned char *pBuff, uintptr_t pBuffSize,
   return 0;
 }
 
-void regcall memswap(unsigned char *src, unsigned char *dst, unsigned len) {
+void regcall memswap(uint8_t *src, uint8_t *dst, unsigned len) {
   for (unsigned char buf; len--;) {
-    buf = *(unsigned char *)(src + len);
-    *(unsigned char *)(src + len) = *(unsigned char *)(dst + len);
-    *(unsigned char *)(dst + len) = buf;
+    buf = *(uint8_t *)(src + len);
+    *(uint8_t *)(src + len) = *(uint8_t *)(dst + len);
+    *(uint8_t *)(dst + len) = buf;
   }
 }
 
-void * regcall memmem(unsigned char *haystack, size_t haystack_len,
-                unsigned char *needle, size_t needle_len)
+void * regcall memmem(uint8_t *haystack, size_t haystack_len,
+                uint8_t *needle, size_t needle_len)
 {
-  unsigned char *begin = haystack;
-  unsigned char *last_possible = begin + haystack_len - needle_len;
-  unsigned char *tail = needle;
+  uint8_t *begin = haystack;
+  uint8_t *last_possible = begin + haystack_len - needle_len;
+  uint8_t *tail = needle;
   char point;
 
   /*
@@ -266,7 +298,25 @@ void *regcall memcpyl(void *d, const void *s, size_t n) {
       *dc++ = *sc++;
     } while (sc < se);
   }
-  return (unsigned char *)(d) + n;
+  return (uint8_t *)(d) + n;
+}
+
+ int bufprintw(wchar_t * buf, size_t sz,const wchar_t * fmt, ...){
+   int val = 0;
+   va_list ap;
+   va_start(ap, fmt);
+   val = swprintf((wchar_t *)buf, sz, fmt,ap);
+   va_end(ap);
+   return val;
+}
+
+ int bufprint(char * buf, size_t sz,const char * fmt, ...){
+   int val = 0;/*
+   va_list ap;
+   va_start(ap, fmt);
+   val = vsprintf((char *)buf, sz, fmt, ap);
+   va_end(ap);*/
+   return val;
 }
 
 int regcall floatToInt(float x) { return int(x); }

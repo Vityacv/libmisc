@@ -22,6 +22,8 @@ extern void _pei386_runtime_relocator (void);
 
 void __cdecl _initterm(_PVFV *, _PVFV *);
 
+void * mingw_app_type;
+
 static int
 pre_c_init (void)
 {

@@ -38,11 +38,11 @@ char* regcall _conv2as(wchar_t* s, char* m, size_t sz) {
 // run-time hash
 unsigned hash_rta(char * str)
 {
-    unsigned hash = MK_FNV32_OFFSET_BASIS;
+    unsigned hash = 0;
     while (*str)
     {
-        hash = hash ^ (unsigned)(*str++);
-        hash = hash * MK_FNV32_PRIME;
+        hash = hash * 31;
+        hash += *str++;
     }
 
     return hash;
@@ -50,11 +50,11 @@ unsigned hash_rta(char * str)
 
 unsigned hash_rtai(char * str)
 {
-    unsigned hash = MK_FNV32_OFFSET_BASIS;
+    unsigned hash = 0;
     while (*str)
     {
-        hash = hash ^ (unsigned)(tolower(*str++));
-        hash = hash * MK_FNV32_PRIME;
+        hash = hash * 31;
+        hash += (*str > 'Z' ? *str++ : (*str++ | 0x20));
     }
 
     return hash;
@@ -62,12 +62,12 @@ unsigned hash_rtai(char * str)
 
 unsigned hash_rtas(char * str,uintptr_t sz)
 {
-    unsigned hash = MK_FNV32_OFFSET_BASIS;
+    unsigned hash = 0;
     unsigned i=0;
     while (sz>i)
     {
-        hash = hash ^ (unsigned)(*str++);
-        hash = hash * MK_FNV32_PRIME;
+        hash = hash * 31;
+        hash += *str++;
         i++;
     }
 
@@ -76,12 +76,12 @@ unsigned hash_rtas(char * str,uintptr_t sz)
 
 unsigned hash_rtasi(char * str,uintptr_t sz)
 {
-    unsigned hash = MK_FNV32_OFFSET_BASIS;
+    unsigned hash = 0;
     unsigned i=0;
     while (sz>i)
     {
-        hash = hash ^ (unsigned)(tolower(*str++));
-        hash = hash * MK_FNV32_PRIME;
+        hash = hash * 31;
+        hash += (*str > 'Z' ? *str++ : (*str++ | 0x20));
         i++;
     }
 
@@ -91,11 +91,11 @@ unsigned hash_rtasi(char * str,uintptr_t sz)
 
 unsigned hash_rtw(wchar_t * str)
 {
-    unsigned hash = MK_FNV32_OFFSET_BASIS;
+    unsigned hash = 0;
     while (*str)
     {
-        hash = hash ^ (unsigned)(*str++);
-        hash = hash * MK_FNV32_PRIME;
+        hash = hash * 31;
+        hash += *str++;
     }
 
     return hash;
@@ -103,11 +103,11 @@ unsigned hash_rtw(wchar_t * str)
 
 unsigned hash_rtwi(wchar_t * str)
 {
-    unsigned hash = MK_FNV32_OFFSET_BASIS;
+    unsigned hash = 0;
     while (*str)
     {
-        hash = hash ^ (unsigned)(towlower(*str++));
-        hash = hash * MK_FNV32_PRIME;
+        hash = hash * 31;
+        hash += (*str > 'Z' ? *str++ : (*str++ | 0x20));
     }
 
     return hash;
@@ -115,12 +115,12 @@ unsigned hash_rtwi(wchar_t * str)
 
 unsigned hash_rtws(wchar_t * str,uintptr_t sz)
 {
-    unsigned hash = MK_FNV32_OFFSET_BASIS;
+    unsigned hash = 0;
     unsigned i=0;
     while (sz>i)
     {
-        hash = hash ^ (unsigned)(*str++);
-        hash = hash * MK_FNV32_PRIME;
+        hash = hash * 31;
+        hash += *str++;
         i++;
     }
 
@@ -129,12 +129,12 @@ unsigned hash_rtws(wchar_t * str,uintptr_t sz)
 
 unsigned hash_rtwsi(wchar_t * str,uintptr_t sz)
 {
-    unsigned hash = MK_FNV32_OFFSET_BASIS;
+    unsigned hash = 0;
     unsigned i=0;
     while (sz>i)
     {
-        hash = hash ^ (unsigned)(towlower(*str++));
-        hash = hash * MK_FNV32_PRIME;
+        hash = hash * 31;
+        hash += (*str > 'Z' ? *str++ : (*str++ | 0x20));
         i++;
     }
 

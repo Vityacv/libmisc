@@ -9,11 +9,11 @@
 constexpr static unsigned
 hash_ct(const char* str)
 {
-    unsigned hash = MK_FNV32_OFFSET_BASIS;
+    unsigned hash = 0;
     while (*str)
     {
-        hash = hash ^ (unsigned)(*str++);
-        hash = hash * MK_FNV32_PRIME;
+        hash = hash * 31;
+        hash += *str++;
     }
 
     return hash;
@@ -22,11 +22,11 @@ hash_ct(const char* str)
 constexpr static unsigned
 hash_ct(wchar_t* str)
 {
-    unsigned hash = MK_FNV32_OFFSET_BASIS;
+    unsigned hash = 0;
     while (*str)
     {
-        hash = hash ^ (unsigned)(*str++);
-        hash = hash * MK_FNV32_PRIME;
+        hash = hash * 31;
+        hash += *str++;
     }
 
     return hash;
@@ -155,7 +155,7 @@ extern "C" {
 }
 #endif
 //not recommended for use
-#define c2a(x) _conv2a(x, (char *)alloca(getUTF16size(x) + sizeof(char)))
+#define c2a(x) _conv2a((wchar_t*)x, (char *)alloca(getUTF16size((wchar_t*)x) + sizeof(char)))
 #define c2w(x)                                                    \
   _conv2w(x, (wchar_t *)alloca(sizeof(wchar_t) * getUTF8size(x) + \
                                sizeof(wchar_t)))
