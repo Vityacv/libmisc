@@ -14,7 +14,7 @@ src=$PWD
 
 sizeopt="-Os -fomit-frame-pointer -fno-stack-protector -mno-stack-arg-probe"
 cppopt="-fno-threadsafe-statics -fno-rtti -fno-exceptions"
-cfshared="-std=c++17 -static -static-libgcc -static-libstdc++ -s -fno-ident -fno-asynchronous-unwind-tables -fdata-sections -ffunction-sections -nostdlib -fno-sized-deallocation -march=core2 -mfpmath=sse -flto $cppopt $sizeopt"
+cfshared="-std=c++17 -static -static-libgcc -static-libstdc++ -s -fno-ident -fno-asynchronous-unwind-tables -ffunction-sections -nostdlib -fno-sized-deallocation -march=core2 -mfpmath=sse -flto $cppopt $sizeopt"
 
 phead="pch.h"
 
@@ -55,13 +55,13 @@ artool=$ar64
 arch=win64
 build $@
 
-$cppcomp64 $cfshared -D_UNICODE -DUNICODE -municode -eentry -include $src/pch.h $src/test.cpp $obj/libmisc.a -lmsvcrt -lkernel32 
+#$cppcomp64 $cfshared -D_UNICODE -DUNICODE -municode -eentry -include $src/pch.h $src/test.cpp $obj/libmisc.a -lmsvcrt -lkernel32 
 
 obj=$subdir1/obj32
 cppcomp=$cppcomp32
 ccomp=$ccomp32
 artool=$ar32
 arch=win32
-#build $@
+build $@
 
 #$cppcomp $cfshared -D_UNICODE -DUNICODE -municode -e_entry -include $src/pch.h $src/test.cpp $obj/libmisc.a -lmsvcrt -lkernel32 
