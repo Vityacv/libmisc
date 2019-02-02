@@ -35,6 +35,28 @@ char* regcall _conv2as(wchar_t* s, char* m, size_t sz) {
   WideCharToMultiByte(CP_UTF8, 0, s, -1, m, sz, NULL, NULL);
   return m;
 }
+
+char *regcall _conv2mb(wchar_t *wb) {
+  int i = 0;
+  do {
+    i++;
+    *(char *)((char *)wb + i) = *(char *)(wb + i);
+  } while (wb[i]);
+  return (char *)wb;
+}
+
+wchar_t *regcall _conv2wb(char *mb) {
+  int i = 0;
+  do {
+    i++;
+  } while (mb[i]);
+  do {
+    i--;
+    *(wchar_t *)((wchar_t *)mb + i) = *(char *)(mb + i);
+  } while (i);
+  return (wchar_t *)mb;
+}
+
 // run-time hash
 unsigned hash_rta(char * str)
 {
